@@ -6,7 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <title>n_pass</title>
-
   <link rel="icon" type="image/png" href="favicon180.png">
   <link rel="apple-touch-icon" href="favicon180.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -251,7 +250,7 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      text-align: center;
+      text-align: left;
     }
 
     .gen-btn {
@@ -411,6 +410,35 @@
       font-size: 18px;
       font-weight: 500;
       color: var(--white);
+      cursor: pointer;
+      border-bottom: 1px dashed transparent;
+      transition: border-color 0.2s ease;
+    }
+
+    .length-value:hover {
+      border-bottom-color: var(--border-hover);
+    }
+
+    .length-edit-input {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--white);
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid var(--white);
+      outline: none;
+      width: 22px;
+      text-align: right;
+      padding: 0;
+      appearance: textfield;
+      -moz-appearance: textfield;
+    }
+
+    .length-edit-input::-webkit-outer-spin-button,
+    .length-edit-input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
     }
 
     .slider-wrap {
@@ -912,6 +940,48 @@
 
     lengthSlider.addEventListener('change', () => {
       animateGenerate();
+    });
+
+    // ===== Click-to-edit length value =====
+    lengthValue.addEventListener('click', () => {
+      if (document.getElementById('lengthEditInput')) return; // already editing
+
+      const input = document.createElement('input');
+      input.type = 'number';
+      input.id = 'lengthEditInput';
+      input.className = 'length-edit-input';
+      input.min = 4;
+      input.max = 40;
+      input.value = state.length;
+
+      lengthValue.replaceWith(input);
+      input.focus();
+      input.select();
+
+      function commit() {
+        let val = parseInt(input.value, 10);
+        if (isNaN(val)) val = state.length;
+        val = Math.max(4, Math.min(40, val));
+
+        state.length = val;
+        lengthSlider.value = val;
+        updateSliderFill();
+        lengthValue.textContent = val;
+
+        input.replaceWith(lengthValue);
+        playClick();
+        animateGenerate();
+      }
+
+      input.addEventListener('blur', commit);
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          input.blur();
+        } else if (e.key === 'Escape') {
+          input.value = state.length;
+          input.blur();
+        }
+      });
     });
 
     moreOptionsBtn.addEventListener('click', () => {
